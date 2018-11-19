@@ -4,20 +4,50 @@ using System.Collections.Generic;
 
 namespace BinaryTreeLib
 {
+    /// <summary>
+    /// Represents binary tree class
+    /// </summary>
+    /// <typeparam name="T">type of the parameter which must put in the tree</typeparam>
     public class BinaryTree<T> : IEnumerable<T>
     {
         private Node<T> root;
         private Comparison<T> comparison;
 
-        public BinaryTree(IEnumerable<T> elements)
+        #region Constructors
+        /// <summary>
+        /// Default constructor
+        /// <exception cref="ArgumentException">Thrown when type T not implement IComparable</exception>
+        /// </summary>
+        public BinaryTree()
         {
+            if (!typeof(IComparable<T>).IsAssignableFrom(typeof(T)))
+            {
+                throw new ArgumentException($"The {typeof(T)} not implement IComparable");
+            }
+
             comparison = Comparer<T>.Default.Compare;
+        }
+
+        /// <summary>
+        /// Constructor which takes collection for initialization 
+        /// </summary>
+        /// /// <exception cref="ArgumentException">Thrown when type T not implement IComparable</exception>
+        /// <param name="elements">collection for initialization</param>
+        public BinaryTree(IEnumerable<T> elements) : this()
+        {
             foreach (T element in elements)
             {
                 this.Add(element);
             }
         }
 
+        /// <summary>
+        /// Constructor which takes collection and condition of comparison for initialization
+        /// </summary>
+        /// /// <exception cref="ArgumentException">Thrown when type T not implement IComparable</exception>
+        /// <exception cref="ArgumentNullException">Thrown when condition to compare is not set</exception>
+        /// <param name="elements">collection for initialization</param>
+        /// <param name="comparison">condition to compare two elements (return -1 if first less then second, 0 if equals, 1 if second less than first)</param>
         public BinaryTree(IEnumerable<T> elements, Comparison<T> comparison)
         {
             this.comparison = comparison ?? throw new ArgumentNullException($"Comparer {nameof(comparison)} haves null value");
@@ -27,21 +57,36 @@ namespace BinaryTreeLib
             }
         }
 
+        /// <summary>
+        /// Constructor which takes collection and condition of comparison for initialization
+        /// </summary>
+        /// /// <exception cref="ArgumentException">Thrown when type T not implement IComparable</exception>
+        /// <exception cref="ArgumentNullException">Thrown when condition to compare is not set</exception>
+        /// <param name="elements">collection for initialization</param>
+        /// <param name="comparer">compare two elements</param>
         public BinaryTree(IEnumerable<T> elements, IComparer<T> comparer) : this(elements, comparer.Compare)
         {
         }
 
+        /// <summary>
+        /// Constructor which takes collection and condition of comparison for initialization
+        /// </summary>
+        /// /// <exception cref="ArgumentException">Thrown when type T not implement IComparable</exception>
+        /// <exception cref="ArgumentNullException">Thrown when condition to compare is not set</exception>
+        /// <param name="elements">collection for initialization</param>
+        /// <param name="comparer">compare two elements</param>
         public BinaryTree(IEnumerable<T> elements, Comparer<T> comparer) : this(elements, comparer.Compare)
         {
         }
+        #endregion
 
+        #region Public methods
+        /// <summary>
+        /// Add element to the binary tree
+        /// </summary>
+        /// <param name="element">element to add</param>
         public void Add(T element)
         {
-            if (element == null)
-            {
-                throw new ArgumentNullException($"Elemnt {nameof(element)} haves null value");
-            }
-
             Node<T> node = new Node<T>(element);
 
             if (root == null)
@@ -73,9 +118,13 @@ namespace BinaryTreeLib
                 {
                     parent.Right = node;
                 }
-            }   
+            }
         }
 
+        /// <summary>
+        /// Remove element from the binary tree
+        /// </summary>
+        /// <param name="element">element which must be removed</param>
         public void Remove(T element)
         {
             if (element == null)
@@ -176,21 +225,69 @@ namespace BinaryTreeLib
             }
         }
 
+        /// <summary>
+        /// Check belong or not element to the binary tree
+        /// </summary>
+        /// <param name="element">element to check</param>
+        /// <returns></returns>
+        public bool Contains(T element)
+        {
+            Node<T> current = root;
+            while (current != null)
+            {
+                if (comparison(element, current.Left.Data) == 0)
+                {
+                    return true;
+                }
+
+                if (comparison(element, current.Left.Data) < 0)
+                {
+                    current = current.Left;
+                }
+                else
+                {
+                    current = current.Right;
+                }
+            }
+
+            return false;
+        }
+        
+        /// <summary>
+        /// Tree traversal (node, left, right)
+        /// </summary>
+        /// <returns>collection by current traversal</returns>
         public IEnumerable<T> Preorder()
             => Preorder(root);
 
+        /// <summary>
+        /// Tree traversal (left, node, right)
+        /// </summary>
+        /// <returns>collection by current traversal</returns>
         public IEnumerable<T> Inorder()
             => Inorder(root);
 
+        /// <summary>
+        /// Tree traversal (left, right, node)
+        /// </summary>
+        /// <returns>collection by current traversal</returns>
         public IEnumerable<T> PostOrder()
             => Postrder(root);
+        #endregion
 
+        #region Enumerators
+        /// <summary>
+        /// Return enumerator
+        /// </summary>
+        /// <returns>enumerator</returns>
         public IEnumerator<T> GetEnumerator()
         => Inorder(root).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
          => Inorder(root).GetEnumerator();
+        #endregion
 
+#region Private methods
         private IEnumerable<T> Preorder(Node<T> root)
         {
             if (root == null)
@@ -199,8 +296,15 @@ namespace BinaryTreeLib
             }
 
             yield return root.Data;
-            Preorder(root.Left);
-            Preorder(root.Right);
+            foreach (var element in Preorder(root.Left))
+            {
+                yield return element;
+            }
+
+            foreach (var element in Preorder(root.Right))
+            {
+                yield return element;
+            }
         }
 
         private IEnumerable<T> Inorder(Node<T> root)
@@ -210,9 +314,16 @@ namespace BinaryTreeLib
                 yield break;
             }
 
-            Preorder(root.Left);
+            foreach (var element in Inorder(root.Left))
+            {
+                yield return element;
+            }
+
             yield return root.Data;
-            Preorder(root.Right);
+            foreach (var element in Inorder(root.Right))
+            {
+                yield return element;
+            }
         }
 
         private IEnumerable<T> Postrder(Node<T> root)
@@ -222,12 +333,22 @@ namespace BinaryTreeLib
                 yield break;
             }
 
-            Preorder(root.Left);
-            Preorder(root.Right);
+            foreach (var element in Inorder(root.Left))
+            {
+                yield return element;
+            }
+
+            foreach (var element in Inorder(root.Right))
+            {
+                yield return element;
+            }
+
             yield return root.Data;
         }
+        #endregion
 
-        public class Node<T>
+        #region Inner Types
+        private class Node<T>
         {
             public Node(T element)
             {
@@ -245,5 +366,6 @@ namespace BinaryTreeLib
 
             public Node<T> Right { get; set; }
         }
+        #endregion
     }
 }

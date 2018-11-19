@@ -55,6 +55,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinaryTreeLibTest.cs" />
+    <Compile Include="Helpers\Book.cs" />
+    <Compile Include="Helpers\Point.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
